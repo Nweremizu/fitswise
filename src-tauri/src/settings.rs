@@ -32,6 +32,7 @@ pub struct Settings {
     pub low_battery_popup: bool,
     /// The first-run question about starting with Windows has been answered.
     pub asked_startup: bool,
+    pub check_updates: bool,
     pub shortcuts: Shortcuts,
 }
 
@@ -41,6 +42,7 @@ impl Default for Settings {
             popup_on_connect: true,
             low_battery_popup: true,
             asked_startup: false,
+            check_updates: true,
             shortcuts: Shortcuts::default(),
         }
     }

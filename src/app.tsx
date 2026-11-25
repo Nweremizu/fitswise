@@ -19,7 +19,7 @@ import {
   type AppInfo,
   type Buds,
   type Change,
-  drawnSeats,
+  drawn,
   getApp,
   pageReady,
   type Settings,
@@ -28,6 +28,7 @@ import {
   startWithWindows,
   useBuds,
   useNotice,
+  useUpdate,
 } from "@/lib/api";
 
 const showError = (message: string) => toastManager.add({ title: "Not changed", description: message, type: "error" });
@@ -121,6 +122,7 @@ type MainProps = { buds: Buds; name: string; apply: (c: Change) => void; onSetti
 
 function MainPage({ buds, name, apply, onSettings }: MainProps) {
   const help = HELP[buds.status];
+  const update = useUpdate();
   const ready = buds.status === "connected";
   return (
     <>
@@ -131,8 +133,14 @@ function MainPage({ buds, name, apply, onSettings }: MainProps) {
           </h1>
           {!help && <StatusLine buds={buds} />}
         </div>
-        <Button aria-label="Settings" onClick={onSettings} size="icon" type="button" variant="ghost">
+        <Button
+          aria-label={update?.version ? "Settings, update available" : "Settings"}
+          className="relative"
+          onClick={onSettings} size="icon" type="button" variant="ghost">
           <SettingsIcon aria-hidden="true" />
+          {update?.version && (
+            <span className="absolute end-1.5 top-1.5 size-2 rounded-full bg-info ring-2 ring-background" />
+          )}
         </Button>
       </header>
       <main className="relative flex min-h-0 flex-1 flex-col">
@@ -140,8 +148,7 @@ function MainPage({ buds, name, apply, onSettings }: MainProps) {
           <BudsModel
             className="size-full"
             label={ready ? "Earbuds and their open case" : "Earbuds case, closed"}
-            lid={ready}
-            seated={drawnSeats(buds)}
+            {...drawn(buds)}
           />
         </div>
         <div className="m-3 mt-0 flex h-52 shrink-0 flex-col justify-between rounded-3xl border bg-card px-4 pt-4 pb-3">

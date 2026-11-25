@@ -3,6 +3,7 @@ mod controller;
 mod hotkeys;
 mod settings;
 mod tray;
+mod updates;
 mod windows_ui;
 
 use controller::{Buds, Change, Controller};
@@ -27,6 +28,7 @@ struct AppInfo {
     settings: Settings,
     startup: bool,
     shortcut_problems: Problems,
+    update: updates::UpdateState,
 }
 
 #[tauri::command(async)]
@@ -49,6 +51,7 @@ fn get_app(app: AppHandle) -> AppInfo {
         settings: app.state::<Mutex<Settings>>().lock().unwrap().clone(),
         startup: app.autolaunch().is_enabled().unwrap_or(false),
         shortcut_problems: hotkeys::problems(&app),
+        update: updates::state(&app),
     }
 }
 
@@ -105,6 +108,16 @@ fn close_popup(app: AppHandle) {
     }
 }
 
+#[tauri::command]
+async fn check_update(app: AppHandle) -> Result<bool, String> {
+    updates::check(&app).await
+}
+
+#[tauri::command]
+async fn install_update(app: AppHandle) -> Result<(), String> {
+    updates::install(&app).await
+}
+
 #[tauri::command(async)]
 fn open_main(app: AppHandle) {
     windows_ui::open_main(&app);
@@ -122,6 +135,7 @@ pub fn run() {
             Some(vec![HIDDEN]),
         ))
         .plugin(hotkeys::plugin())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let app = app.handle();
             let settings = settings::load(app);
@@ -129,6 +143,7 @@ pub fn run() {
             app.manage(PopupRequest::default());
             hotkeys::register(app, &settings.shortcuts);
             app.manage(Mutex::new(settings));
+            updates::start(app);
             tray::build(app)?;
             let controller: Arc<Controller> = Controller::start(app);
             app.manage(controller);
@@ -150,7 +165,9 @@ pub fn run() {
             page_ready,
             popup_request,
             close_popup,
-            open_main
+            open_main,
+            check_update,
+            install_update
         ])
         .build(tauri::generate_context!())
         .expect("FitsWise could not start")

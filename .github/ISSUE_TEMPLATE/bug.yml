@@ -1,0 +1,37 @@
+name: Something isn't working
+description: Report a bug in FitsWise
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: FitsWise version
+      description: Shown at the bottom of Settings.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows
+      options: ["Windows 11", "Windows 10"]
+    validations:
+      required: true
+  - type: input
+    id: buds
+    attributes:
+      label: Earbuds and where they were
+      placeholder: "Beats Fit Pro, left worn, right in the shut case"
+  - type: textarea
+    id: log
+    attributes:
+      label: Trace log (development builds only)
+      description: Lines from %TEMP%\fitswise-trace.log around the problem. Remove anything you'd rather not share.
+      render: text

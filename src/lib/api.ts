@@ -20,6 +20,7 @@ export type Buds = {
   name: string | null;
   battery: Battery;
   inCase: { left: boolean; right: boolean };
+  caseOpen: boolean;
   mode: Mode | null;
   earDetection: boolean | null;
   oneBud: boolean | null;
@@ -28,9 +29,18 @@ export type Buds = {
   color: number | null;
 };
 
-const SEATED = { left: true, right: true };
-/** Where to draw the buds. Until they are connected their position is unknown, so keep them in the case. */
-export const drawnSeats = (b: Buds) => (b.status === "connected" ? b.inCase : SEATED);
+/**
+ * What the 3D view shows. Until the buds are connected their position is unknown: a closed case.
+ * With the lid shut the case isn't drawn, just the buds side by side.
+ */
+export function drawn(b: Buds) {
+  const on = b.status === "connected";
+  return {
+    lid: on && b.caseOpen,
+    showCase: !on || b.caseOpen,
+    seated: on ? b.inCase : { left: true, right: true },
+  };
+}
 
 export type Change =
   | { kind: "mode"; value: Mode }
@@ -44,7 +54,14 @@ export type Settings = {
   popupOnConnect: boolean;
   lowBatteryPopup: boolean;
   askedStartup: boolean;
+  checkUpdates: boolean;
   shortcuts: { enabled: boolean } & Record<ShortcutAction, string | null>;
+};
+export type UpdateState = {
+  version: string | null;
+  notes: string | null;
+  progress: [number, number | null] | null;
+  error: string | null;
 };
 export type AppInfo = {
   name: string;
@@ -52,6 +69,7 @@ export type AppInfo = {
   settings: Settings;
   startup: boolean;
   shortcutProblems: Record<ShortcutAction, string | null>;
+  update: UpdateState;
 };
 export type PopupKind = { kind: "connected" } | { kind: "lowBattery"; level: number };
 
@@ -62,6 +80,8 @@ export const pageReady = () => invoke<void>("page_ready");
 export const popupRequest = () => invoke<PopupKind>("popup_request");
 export const closePopup = () => invoke<void>("close_popup");
 export const openMain = () => invoke<void>("open_main");
+export const checkUpdate = () => invoke<boolean>("check_update");
+export const installUpdate = () => invoke<void>("install_update");
 
 /** Subscribes before reading, so a change between the two is never missed. */
 function useLive<T>(event: string, read: () => Promise<T>): [T | null, (v: T) => void] {
@@ -95,6 +115,12 @@ export function useNotice(show: (message: string) => void) {
 
 const readBuds = () => invoke<Buds>("get_buds");
 const readStartup = () => getApp().then((a) => a.startup);
+
+const readUpdate = () => getApp().then((a) => a.update);
+
+export function useUpdate() {
+  return useLive<UpdateState>("update", readUpdate)[0];
+}
 
 export function useStartup() {
   return useLive<boolean>("startup", readStartup);

@@ -13,10 +13,11 @@
       const cell = (percent, charging = false, stale = false) => ({ percent, charging, stale });
       const buds = {
         status,
-        name: ["bluetoothOff", "notPaired", "unsupported"].includes(status) ? null : (q.get("name") ?? "Heart and Soul"),
+        name: ["bluetoothOff", "notPaired", "unsupported"].includes(status) ? null : (q.get("name") ?? "My earbuds"),
         battery: on
           ? { left: cell(+(q.get("left") ?? 85)), right: cell(80, q.has("charging")), case: cell(64, false, !q.has("case")) }
           : { left: null, right: null, case: null },
+        caseOpen: !q.has("shut"),
         inCase: { left: on && !q.has("worn"), right: on && !q.has("worn") && !q.has("one") },
         mode: on ? "transparency" : null,
         earDetection: on ? true : null,
@@ -32,10 +33,12 @@
         startup: false,
         settings: {
           popupOnConnect: true,
+          checkUpdates: true,
           lowBatteryPopup: true,
           askedStartup: !q.has("ask"),
           shortcuts: { enabled: true, anc: key(1), transparency: key(2), off: key(3), open: q.has("problem") ? null : key("B") },
         },
+        update: { version: q.get("update"), notes: q.has("update") ? "Smoother animations and a new icon." : null, progress: q.has("downloading") ? [1200000, 2000000] : null, error: null },
         shortcutProblems: { anc: q.has("problem") ? "Already used by another app." : null, transparency: null, off: null, open: null },
       };
       let id = 0;
@@ -118,6 +121,8 @@
         pre.textContent = lines.join("\n");
         document.body.append(pre);
       }
+      // ?worn&close=3000 shuts the case that many ms in, to watch the closing animation.
+      if (q.has("close")) setTimeout(() => emitBuds({ caseOpen: false }), +q.get("close") || 3000);
       if (q.has("scroll")) setTimeout(() => document.querySelector("[data-slot=scroll-area-viewport]")?.scrollTo(0, +q.get("scroll")), 1200);
     </script>
   </body>

@@ -5,7 +5,7 @@ import { BatteryRings } from "@/components/battery";
 import { BudsModel } from "@/components/buds-model";
 import { NoiseModes } from "@/components/noise-modes";
 import { Button } from "@/components/ui/button";
-import { closePopup, drawnSeats, openMain, type PopupKind, pageReady, popupRequest, useBuds } from "@/lib/api";
+import { closePopup, drawn, openMain, type PopupKind, pageReady, popupRequest, useBuds } from "@/lib/api";
 import { followWindowsTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import "./index.css";
@@ -101,7 +101,7 @@ function Popup() {
             }}
             type="button"
           >
-            <BudsModel className="h-full" label="Earbuds case opening" lid={shown} seated={drawnSeats(buds)} spin zoom={1.12} />
+            <BudsModel className="h-full" label="Earbuds case opening" {...drawn(buds)} lid={shown && drawn(buds).lid} spin zoom={1.12} />
           </button>
         )}
         <BatteryRings battery={buds.battery} />
