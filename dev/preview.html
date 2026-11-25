@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitsWise preview</title>
+    <script>
+      // Runs the real pages in a browser with pretend buds. Not part of any build.
+      //   /dev/preview.html?page=main|popup&status=connected&click=Settings&low=1&ask=1&problem=1&left=15
+      const q = new URLSearchParams(location.search);
+      const status = q.get("status") ?? "connected";
+      const on = status === "connected";
+      const cell = (percent, charging = false, stale = false) => ({ percent, charging, stale });
+      const buds = {
+        status,
+        name: ["bluetoothOff", "notPaired", "unsupported"].includes(status) ? null : (q.get("name") ?? "Heart and Soul"),
+        battery: on
+          ? { left: cell(+(q.get("left") ?? 85)), right: cell(80, q.has("charging")), case: cell(64, false, !q.has("case")) }
+          : { left: null, right: null, case: null },
+        inCase: { left: on && !q.has("worn"), right: on && !q.has("worn") && !q.has("one") },
+        mode: on ? "transparency" : null,
+        earDetection: on ? true : null,
+        oneBud: on ? true : null,
+        leftPress: on ? "volumeDown" : null,
+        rightPress: on ? "volumeUp" : null,
+        color: on ? 3 : null,
+      };
+      const key = (k) => `Ctrl+Alt+Shift+${k}`;
+      const app = {
+        name: "FitsWise",
+        version: "0.1.0",
+        startup: false,
+        settings: {
+          popupOnConnect: true,
+          lowBatteryPopup: true,
+          askedStartup: !q.has("ask"),
+          shortcuts: { enabled: true, anc: key(1), transparency: key(2), off: key(3), open: q.has("problem") ? null : key("B") },
+        },
+        shortcutProblems: { anc: q.has("problem") ? "Already used by another app." : null, transparency: null, off: null, open: null },
+      };
+      let id = 0;
+      const apply = { mode: (v) => (buds.mode = v), earDetection: (v) => (buds.earDetection = v), oneBud: (v) => (buds.oneBud = v), name: (v) => (buds.name = v), press: ([s, p]) => (buds[`${s}Press`] = p) };
+      const commands = {
+        get_buds: () => structuredClone(buds),
+        get_app: () => structuredClone(app),
+        save_settings: ({ settings }) => structuredClone(Object.assign(app, { settings })),
+        change: ({ change }) => {
+          if (q.has("refuse")) throw "The buds refused the change.";
+          apply[change.kind](change.value);
+        },
+        popup_request: () => (q.has("low") ? { kind: "lowBattery", level: 15 } : { kind: "connected" }),
+      };
+      window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener() {} };
+      const callbacks = {};
+      const listeners = {};
+      const emitBuds = (change) => {
+        Object.assign(buds, change);
+        for (const h of listeners.buds ?? []) callbacks[h]?.({ event: "buds", id: h, payload: structuredClone(buds) });
+      };
+      window.__TAURI_INTERNALS__ = {
+        transformCallback: (f) => ((callbacks[++id] = f), id),
+        unregisterCallback() {},
+        invoke: async (cmd, args) => {
+          if (cmd === "plugin:event|listen") (listeners[args.event] ??= []).push(args.handler);
+          return cmd.startsWith("plugin:event") ? ++id : (commands[cmd]?.(args) ?? null);
+        },
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      if (q.get("page") === "popup" && q.has("bg")) document.documentElement.style.background = q.get("bg");
+      await import(q.get("page") === "popup" ? "/src/popup.tsx" : "/src/main.tsx");
+      for (const label of q.getAll("click")) {
+        await new Promise((r) => setTimeout(r, 700));
+        const all = [...document.querySelectorAll("button,[role=radio],[role=switch],[role=combobox]")];
+        all.find((b) => (b.getAttribute("aria-label") ?? b.textContent).includes(label))?.click();
+      }
+      // ?measure plays the buds being moved about and reports anything on screen that jumped.
+      if (q.has("measure")) {
+        const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+        await wait(2500);
+        let shift = 0, resized = 0, rebuilt = 0;
+        const moved = [];
+        new PerformanceObserver((l) => {
+          for (const e of l.getEntries()) {
+            shift += e.value;
+            for (const x of e.sources ?? []) moved.push(`${x.node?.nodeName}.${String(x.node?.className?.baseVal ?? x.node?.className).slice(0, 40)}`);
+          }
+        }).observe({ type: "layout-shift", buffered: false });
+        const first = document.querySelector("canvas");
+        new MutationObserver(() => resized++).observe(first, { attributes: true, attributeFilter: ["width", "height"] });
+        const boxes = () => [...document.querySelectorAll("canvas,[role=meter],[role=radiogroup],[role=radio],h1")].map((e) => { const b = e.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map((n) => Math.round(n * 2) / 2).join(); }).join("|");
+        const rings = () => [...document.querySelectorAll("[role=meter]")].map((m) => m.getAttribute("aria-valuetext")).join(" / ");
+        const start = boxes(), lines = [`start: ${rings()}`];
+        const known = (l, c, rr) => ({ left: l, case: c, right: rr });
+        const steps = [
+          ["left lifted", { inCase: { left: false, right: true }, battery: known(cell(85), cell(64), cell(80, true)) }],
+          ["left vanishes", { battery: known(cell(85, false, true), cell(64), cell(80, true)) }],
+          ["both worn, case shut", { inCase: { left: false, right: false }, battery: known(cell(85), cell(64, false, true), cell(80)) }],
+          ["dropped", { status: "disconnected", battery: known(cell(85, false, true), cell(64, false, true), cell(80, false, true)) }],
+          ["connecting", { status: "connecting" }],
+          ["back in case", { status: "connected", inCase: { left: true, right: true }, battery: known(cell(86, true), cell(64), cell(81, true)) }],
+        ];
+        for (const [name, change] of steps) {
+          emitBuds(change);
+          await wait(1300);
+          const same = boxes() === start;
+          lines.push(`${name}: ${rings()}  boxes ${same ? "unchanged" : "MOVED"}`);
+        }
+        const go = (n) => [...document.querySelectorAll("button")].find((b) => b.getAttribute("aria-label") === n)?.click();
+        go("Settings"); await wait(600); go("Back"); await wait(600);
+        if (document.querySelector("canvas") !== first) rebuilt++;
+        lines.push(`layout shift ${shift.toFixed(4)}, canvas resizes ${resized}, 3D rebuilt ${rebuilt}`, ...new Set(moved));
+        const pre = document.createElement("pre");
+        pre.id = "report";
+        pre.textContent = lines.join("\n");
+        document.body.append(pre);
+      }
+      if (q.has("scroll")) setTimeout(() => document.querySelector("[data-slot=scroll-area-viewport]")?.scrollTo(0, +q.get("scroll")), 1200);
+    </script>
+  </body>
+</html>

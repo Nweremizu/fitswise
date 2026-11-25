@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+    --radius: 0.625rem;
+    color-scheme: light;
+    --destructive-foreground: var(--color-red-700);
+    --accent: --alpha(var(--color-black) / 4%);
+    --accent-foreground: var(--color-neutral-800);
+    --background: var(--color-white);
+    --border: --alpha(var(--color-black) / 8%);
+    --card: var(--color-white);
+    --card-foreground: var(--color-neutral-800);
+    --destructive: var(--color-red-500);
+    --foreground: var(--color-neutral-800);
+    --info: var(--color-blue-500);
+    --info-foreground: var(--color-blue-700);
+    --input: --alpha(var(--color-black) / 10%);
+    --muted: --alpha(var(--color-black) / 4%);
+    --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
+    --popover: var(--color-white);
+    --popover-foreground: var(--color-neutral-800);
+    --primary: var(--color-neutral-800);
+    --primary-foreground: var(--color-neutral-50);
+    --ring: var(--color-neutral-400);
+    --secondary: --alpha(var(--color-black) / 4%);
+    --secondary-foreground: var(--color-neutral-800);
+    --success: var(--color-emerald-500);
+    --success-foreground: var(--color-emerald-700);
+    --warning: var(--color-amber-500);
+    --warning-foreground: var(--color-amber-700);
+}
+
+.dark {
+    color-scheme: dark;
+    --destructive-foreground: var(--color-red-400);
+    --accent: --alpha(var(--color-white) / 4%);
+    --accent-foreground: var(--color-neutral-100);
+    --background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
+    --border: --alpha(var(--color-white) / 6%);
+    --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
+    --card-foreground: var(--color-neutral-100);
+    --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
+    --foreground: var(--color-neutral-100);
+    --info: var(--color-blue-500);
+    --info-foreground: var(--color-blue-400);
+    --input: --alpha(var(--color-white) / 8%);
+    --muted: --alpha(var(--color-white) / 4%);
+    --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
+    --popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
+    --popover-foreground: var(--color-neutral-100);
+    --primary: var(--color-neutral-100);
+    --primary-foreground: var(--color-neutral-800);
+    --ring: var(--color-neutral-500);
+    --secondary: --alpha(var(--color-white) / 4%);
+    --secondary-foreground: var(--color-neutral-100);
+    --success: var(--color-emerald-500);
+    --success-foreground: var(--color-emerald-400);
+    --warning: var(--color-amber-500);
+    --warning-foreground: var(--color-amber-400);
+}
+
+@theme inline {
+    --font-sans: "Segoe UI Variable Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    --font-heading: "Segoe UI Variable Display", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+    --color-destructive-foreground: var(--destructive-foreground);
+    --animate-toast-success-odd: toast-success-odd 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+    --animate-toast-success-even: toast-success-even 0.32s cubic-bezier(0.5, 1, 0.89, 1);
+    --animate-toast-error-odd: toast-error-odd 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+    --animate-toast-error-even: toast-error-even 0.28s cubic-bezier(0.5, 1, 0.89, 1);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-warning: var(--warning);
+    --color-success-foreground: var(--success-foreground);
+    --color-success: var(--success);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-ring: var(--ring);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-input: var(--input);
+    --color-info-foreground: var(--info-foreground);
+    --color-info: var(--info);
+    --color-foreground: var(--foreground);
+    --color-destructive: var(--destructive);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-border: var(--border);
+    --color-background: var(--background);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+  @keyframes toast-success-odd {
+  0% {
+    scale: 1;
+        }
+  30% {
+    scale: 1.025;
+        }
+  60% {
+    scale: 0.99;
+        }
+  100% {
+    scale: 1;
+        }
+    }
+  @keyframes toast-error-odd {
+  0% {
+    translate: 0 0;
+        }
+  25% {
+    translate: -3px 0;
+        }
+  50% {
+    translate: 3px 0;
+        }
+  75% {
+    translate: -3px 0;
+        }
+  100% {
+    translate: 0 0;
+        }
+    }
+  @keyframes toast-success-even {
+  0% {
+    scale: 1;
+        }
+  30% {
+    scale: 1.025;
+        }
+  60% {
+    scale: 0.99;
+        }
+  100% {
+    scale: 1;
+        }
+    }
+  @keyframes toast-error-even {
+  0% {
+    translate: 0 0;
+        }
+  25% {
+    translate: -3px 0;
+        }
+  50% {
+    translate: 3px 0;
+        }
+  75% {
+    translate: -3px 0;
+        }
+  100% {
+    translate: 0 0;
+        }
+    }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply relative bg-background text-foreground;
+    cursor: default;
+    user-select: none;
+  }
+  input {
+    user-select: text;
+  }
+  .page-in {
+    transition: translate 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease-out;
+    @starting-style {
+      translate: 24px 0;
+      opacity: 0;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+  .stage {
+    background: radial-gradient(60% 50% at 50% 58%, --alpha(var(--color-sky-300) / 28%), transparent);
+  }
+  .dark .stage {
+    background: radial-gradient(60% 50% at 50% 58%, --alpha(var(--color-sky-300) / 14%), transparent);
+  }
+  /* The popup window is transparent; only its card is painted. */
+  .popup body {
+    background: transparent;
+    overflow: hidden;
+  }
+}
