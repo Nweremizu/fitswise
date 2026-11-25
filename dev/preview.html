@@ -121,6 +121,8 @@
         pre.textContent = lines.join("\n");
         document.body.append(pre);
       }
+      // ?worn&close=3000 shuts the case that many ms in, to watch the closing animation.
+      if (q.has("close")) setTimeout(() => emitBuds({ caseOpen: false }), +q.get("close") || 3000);
       if (q.has("scroll")) setTimeout(() => document.querySelector("[data-slot=scroll-area-viewport]")?.scrollTo(0, +q.get("scroll")), 1200);
     </script>
   </body>

@@ -34,6 +34,8 @@ export type SceneOptions = {
 export type BudsScene = { set(o: SceneOptions): void; dispose(): void };
 
 const STILL = matchMedia("(prefers-reduced-motion: reduce)");
+/** How far a floating bud steps sideways so the closing lid clears it (case is ~6.2 wide). Tune by eye. */
+const SPREAD = 2.7;
 
 type Spring = { x: number; v: number };
 
@@ -80,7 +82,7 @@ export async function createScene(canvas: HTMLCanvasElement, first: SceneOptions
   const shut = lid.quaternion.clone();
   const turn = new Quaternion();
   const X = new Vector3(1, 0, 0);
-  // Every bud and the case get their own materials, so each can fade on its own.
+  // Every bud gets its own materials, so each can grey out on its own.
   const own = (o: Object3D) =>
     o.traverse((m) => {
       if (m instanceof Mesh) m.material = (m.material as MeshStandardMaterial).clone();
@@ -94,6 +96,7 @@ export async function createScene(canvas: HTMLCanvasElement, first: SceneOptions
     const face = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI - side * 0.45);
     return {
       key,
+      side,
       node,
       at: node.position.clone(),
       rot: node.quaternion.clone(),
@@ -107,13 +110,11 @@ export async function createScene(canvas: HTMLCanvasElement, first: SceneOptions
     };
   });
   const caseParts = (buds[0].node.parent as Object3D).children.filter((o) => !buds.some((b) => b.node === o));
-  const casePlaces = caseParts.map((o) => o.position.z);
-  const caseMats: MeshStandardMaterial[] = [];
-  for (const o of caseParts) own(o);
+  const casePlaces = caseParts.map((o) => o.position.clone());
+  const caseSizes = caseParts.map((o) => o.scale.clone());
   const collect = (list: MeshStandardMaterial[], parts: Object3D[]) => {
     for (const part of parts) part.traverse((m) => m instanceof Mesh && list.push(m.material as MeshStandardMaterial));
   };
-  collect(caseMats, caseParts);
   for (const b of buds) {
     collect(b.mats, [b.node]);
     b.colors = b.mats.map((m) => m.color.clone());
@@ -122,19 +123,15 @@ export async function createScene(canvas: HTMLCanvasElement, first: SceneOptions
   const grey = new Color();
   const greyOut = (b: (typeof buds)[number], amount: number) =>
     b.mats.forEach((m, i) => m.color.lerpColors(b.colors[i], grey, amount));
-  const fade = (mats: MeshStandardMaterial[], opacity: number) => {
-    for (const m of mats) {
-      m.opacity = opacity;
-      m.transparent = opacity < 1;
-      m.depthWrite = opacity > 0.5;
-    }
-  };
   const solo: Spring = { x: first.showCase ? 0 : 1, v: 0 };
   const pos = new Vector3();
   const rot = new Quaternion();
 
   let want = first;
   const open: Spring = { x: 0, v: 0 };
+  // Closing with buds out: they step aside, the lid shuts, the case goes, then they come back together.
+  const apart: Spring = { x: 0, v: 0 };
+  let parting = false;
   let angle = 0.3;
   let turned = 0;
   let frame = 0;
@@ -144,16 +141,22 @@ export async function createScene(canvas: HTMLCanvasElement, first: SceneOptions
     frame = 0;
     const dt = last ? Math.min((t - last) / 1000, 0.05) : 0.016;
     last = t;
-    const goal = want.lid && want.showCase ? 1 : 0;
+    if (!want.showCase && solo.x < 0.5 && buds.some((b) => b.out.x > 0.3)) parting = true;
+    if (want.showCase || solo.x === 1) parting = false;
+    const apartGoal = parting ? 1 : 0;
+    glide(apart, apartGoal, 0.3, dt);
+    const goal = parting ? (apart.x > 0.9 ? 0 : 1) : want.lid && want.showCase ? 1 : 0;
     glide(open, goal, 0.34, dt);
-    const soloGoal = want.showCase ? 0 : 1;
+    const soloGoal = parting ? (open.x < 0.05 ? 1 : 0) : want.showCase ? 0 : 1;
     glide(solo, soloGoal, 0.42, dt);
-    let moving = open.x !== goal || solo.x !== soloGoal;
+    // parting counts as moving: the frame the case finishes leaving is still before the buds regroup.
+    let moving = parting || open.x !== goal || solo.x !== soloGoal || apart.x !== apartGoal;
     const s = MathUtils.clamp(solo.x, 0, 1);
     for (const b of buds) {
       // Buds rise once the lid is clear of them. The lid never closes before they are back.
-      const out = want.showCase && want.lid && !want.seated[b.key];
-      const to = out && open.x > 0.55 ? 1 : 0;
+      const aside = !want.showCase && !want.seated[b.key] && (parting || apart.x > 0);
+      const out = (want.showCase && want.lid && !want.seated[b.key]) || aside;
+      const to = out && (open.x > 0.55 || aside) ? 1 : 0;
       glide(b.out, to, 0.36, dt);
       const dimGoal = !want.showCase && want.seated[b.key] ? 1 : 0;
       glide(b.dim, dimGoal, 0.3, dt);
@@ -163,15 +166,21 @@ export async function createScene(canvas: HTMLCanvasElement, first: SceneOptions
       pos.z += Math.sin(u * Math.PI) * 0.7;
       rot.slerpQuaternions(b.rot, b.face, u);
       b.node.position.lerpVectors(pos, b.solo, s);
+      // Narrower as the camera zooms in on the solo view, so they stay in frame.
+      b.node.position.x += b.side * SPREAD * (1 - 0.35 * s) * MathUtils.clamp(apart.x, 0, 1) * u;
       b.node.quaternion.slerpQuaternions(rot, b.face, s);
       greyOut(b, 0.72 * MathUtils.clamp(b.dim.x, 0, 1));
     }
-    // The case sinks and fades away when it isn't part of the picture.
+    // The case sinks and shrinks away when it isn't part of the picture. Fading it instead showed the lid's
+    // inside through its outside (transparent surfaces of one model don't sort).
     caseParts.forEach((o, i) => {
-      o.position.z = casePlaces[i] - s * 0.9;
+      // Base and lid shrink about one shared point, so they stay together as one case.
+      const k = Math.max(1 - s, 0.001);
+      o.position.copy(casePlaces[i]).multiplyScalar(k);
+      o.position.z -= s * 0.9;
+      o.scale.copy(caseSizes[i]).multiplyScalar(k);
       o.visible = s < 0.995;
     });
-    fade(caseMats, 1 - s);
     const spinning = want.spin && !STILL.matches;
     if (spinning) angle = 0.3 + Math.sin((turned += dt) / 2.6) * 0.45;
     lid.quaternion.copy(shut).multiply(turn.setFromAxisAngle(X, MathUtils.degToRad(-100 * open.x)));
