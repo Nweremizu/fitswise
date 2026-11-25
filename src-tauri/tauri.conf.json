@@ -30,16 +30,37 @@
     ],
     "icon": [
       "icons/32x32.png",
+      "icons/64x64.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.icns",
+      "icons/icon.png",
       "icons/icon.ico"
     ],
     "publisher": "FitsWise",
     "shortDescription": "Controls Beats Fit Pro from Windows",
     "windows": {
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "languages": [
+          "English"
+        ],
+        "displayLanguageSelector": false,
+        "installerHooks": "windows/hooks.nsh"
+      }
+    },
+    "copyright": "Copyright 2026 FitsWise. Not affiliated with Apple or Beats.",
+    "longDescription": "Battery, noise control and settings for Beats Fit Pro on Windows, with a 3D view and a popup when the buds connect.",
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUzRkZFMEYzMkQ4NjdGRUEKUldUcWY0WXQ4K0QvNDdNRWdiRXFUV25MVTlYeEQxT251YWhNcjZtZDBsMmc4SC96Q3VURU5XSFcK",
+      "endpoints": [
+        "https://github.com/Nweremizu/fitswise/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }

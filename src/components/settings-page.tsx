@@ -2,6 +2,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { LiquidSwitch } from "@/components/liquid-switch";
 import { ShortcutRow } from "@/components/shortcut-row";
+import { UpdateRow } from "@/components/update-row";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -135,6 +136,13 @@ export function SettingsPage({ buds, info, apply, save, onBack }: Props) {
                 )
               }
             />
+            <Toggle
+              checked={settings.checkUpdates}
+              hint="Looks for a new version every few hours."
+              label="Check for updates"
+              onChange={(checkUpdates) => save({ ...settings, checkUpdates })}
+            />
+            <UpdateRow version={info.version} />
             <p className="text-pretty px-4 py-3 text-muted-foreground text-xs">
               {info.name} {info.version}. Works with Beats Fit Pro. Not affiliated with Apple or Beats.
             </p>

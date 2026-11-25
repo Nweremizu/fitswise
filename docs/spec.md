@@ -1,9 +1,9 @@
 # FitsWise: spec
 
 A small, fast Windows app that controls Beats Fit Pro, with an iPhone-style 3D popup on connect.
-Written 2026-11-25 from an interview with Bruno. Status: in progress, see section 12.
+Written 2026-11-25 from an interview with the project owner. Status: in progress, see section 12.
 
-Labels used below: **[proven]** seen working on Bruno's buds. **[accepted]** the buds accepted the command with its
+Labels used below: **[proven]** seen working on a real pair. **[accepted]** the buds accepted the command with its
 current value; a real change is untested. **[from app code]** read from the Android app, never seen on the wire.
 **[unknown]** needs investigation.
 
@@ -51,7 +51,7 @@ other Beats models, macOS/Linux.
 
 Main window: about 380 x 560, fixed size, remembers position.
 
-    Heart and Soul            [gear] _ x
+    My earbuds                [gear] _ x
                [ 3D model ]
           L 85%            R 80%
        [ Noise ][ Transparency ][ Off ]
@@ -162,7 +162,7 @@ names flash, firmware, shipping-mode and factory-reset commands: never include t
 | Noise cancelling / transparency / off | Ctrl+Alt+Shift+1 / 2 / 3 |
 | Open FitsWise | Ctrl+Alt+Shift+B |
 
-Tested 2026-11-25 on Bruno's PC: all four are free as global hotkeys. Limits and rules:
+Tested 2026-11-25 on the development PC: all four are free as global hotkeys. Limits and rules:
 - On some layouts AltGr+Shift equals Ctrl+Alt+Shift and may type characters. On startup and on layout change, check each
   installed layout with `ToUnicodeEx`; if a key types anything, leave that shortcut unset and say why.
 - If registration fails, leave that shortcut unset and show "Already used by another app". Never fail silently.
@@ -207,7 +207,8 @@ If "poster visible" misses its target, revisit the choice to free memory when id
   captures, the Android app or its decompiled code, or any serial number.
 - Describe as "works with Beats Fit Pro", with a "not affiliated with Apple or Beats" notice. This is not legal advice.
 - Publish hashes with each release and build it in GitHub Actions. Expect a SmartScreen warning while unsigned.
-- No accounts, analytics or network calls. Updates: link to the releases page; no auto-updater in v1.
+- No accounts or analytics. The only network call is the update check: `latest.json` on the newest GitHub release,
+  signed with a key kept outside the repository (CI secret `TAURI_SIGNING_PRIVATE_KEY`). The user confirms each install.
 
 ## 10. Build order and acceptance
 
@@ -220,12 +221,11 @@ If "poster visible" misses its target, revisit the choice to free memory when id
    quiet after a short drop.
 6. **Models.** Generic model made; both compressed; posters rendered for light and dark.
 7. **Investigations** from section 7, then their UI if they pass.
-8. **Budgets** measured on Bruno's laptop and written into the README. Eight hours in the tray without a leak or a drop.
+8. **Budgets** measured on the development laptop and written into the README. Eight hours in the tray without a leak or a drop.
 
 ## 11. Assumptions to confirm
 
-- Bruno's answer on the window ("the settings page, the windows, calendar...") was dictated. Read as: one uncluttered main
-  page plus a separate Settings page inside the same window.
+- One main page plus a separate Settings page inside the same window.
 - Windows 11 and Windows 10 22H2, x64 only.
 - MIT licence.
 - The detailed 3D model is known to be off in places; refining it is later work.
@@ -239,7 +239,7 @@ If "poster visible" misses its target, revisit the choice to free memory when id
   swapped for about 30 ms; a swap is believed only if the buds repeat it when asked.
 - **Unknown readings:** a bud can report `ff 03` (and the case `00 03`) while buds move, sometimes without a later correction. A seated part
   keeps its level and charging state, and the app asks again every 1.5 s, up to 8 times.
-- **Confirmed by Bruno on the development build:** correct bud animates, all three noise modes, charging symbol stays.
+- **Confirmed on the development build:** correct bud animates, all three noise modes, charging symbol stays.
 - **Noise modes in the case:** the buds accept the command but keep their mode. The app confirms by reading back.
 - **Press-and-hold modes (418a/418c):** not investigated yet.
 - **UI:** Liquid Segments and Liquid Switch from devl.dev (MIT), grouped rows after its Security Settings screen.

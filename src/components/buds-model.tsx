@@ -4,19 +4,19 @@ import { cn } from "@/lib/utils";
 import { useDark } from "@/lib/theme";
 import type { BudsScene, Seated } from "./buds-scene";
 
-type Props = { lid: boolean; seated: Seated; spin?: boolean; zoom?: number; label: string; className?: string };
+type Props = { lid: boolean; showCase: boolean; seated: Seated; spin?: boolean; zoom?: number; label: string; className?: string };
 
 const BLEND_MS = 180;
 
 /** Shows a still picture at once, then fades to live 3D. Stays on the picture without WebGL. */
-export function BudsModel({ lid, seated, spin, zoom = 1, label, className }: Props) {
+export function BudsModel({ lid, showCase, seated, spin, zoom = 1, label, className }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<BudsScene>(null);
   const [stage, setStage] = useState<"still" | "blend" | "live">("still");
   const dark = useDark();
   const { left, right } = seated;
-  const options = useRef({ lid, seated, spin, dark, zoom });
-  options.current = { lid, seated, spin, dark, zoom };
+  const options = useRef({ lid, showCase, seated, spin, dark, zoom });
+  options.current = { lid, showCase, seated, spin, dark, zoom };
 
   useEffect(() => {
     let gone = false;
@@ -43,8 +43,8 @@ export function BudsModel({ lid, seated, spin, zoom = 1, label, className }: Pro
   }, []);
 
   useEffect(() => {
-    if (stage === "live") scene.current?.set({ lid, seated: { left, right }, spin, dark, zoom });
-  }, [stage, lid, left, right, spin, dark, zoom]);
+    if (stage === "live") scene.current?.set({ lid, showCase, seated: { left, right }, spin, dark, zoom });
+  }, [stage, lid, showCase, left, right, spin, dark, zoom]);
 
   return (
     <div aria-label={label} className={cn("relative overflow-hidden", className)} role="img">

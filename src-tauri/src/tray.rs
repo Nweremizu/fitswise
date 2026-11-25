@@ -15,6 +15,7 @@ const MODES: [(&str, &str, Mode); 3] = [
 struct Items {
     modes: Vec<(Mode, CheckMenuItem<Wry>)>,
     startup: CheckMenuItem<Wry>,
+    update: MenuItem<Wry>,
 }
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
@@ -35,6 +36,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
         true,
         None::<&str>,
     )?;
+    let update = MenuItem::with_id(app, "update", "Check for updates", true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let line = || PredefinedMenuItem::separator(app);
     let (l1, l2, l3) = (line()?, line()?, line()?);
@@ -48,11 +50,16 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             &modes[2].1,
             &l2,
             &startup,
+            &update,
             &l3,
             &quit,
         ],
     )?;
-    app.manage(Items { modes, startup });
+    app.manage(Items {
+        modes,
+        startup,
+        update,
+    });
 
     let mut tray = TrayIconBuilder::with_id("tray")
         .tooltip(crate::NAME)
@@ -82,6 +89,15 @@ fn menu_clicked(app: &AppHandle, id: &str) {
     match id {
         "quit" => app.exit(0),
         "open" => drop(std::thread::spawn(move || windows_ui::open_main(&app))),
+        "update" => {
+            tauri::async_runtime::spawn(async move {
+                if crate::updates::state(&app).version.is_some() {
+                    let _ = crate::updates::install(&app).await;
+                } else if crate::updates::check(&app).await == Ok(false) {
+                    set_update_text(&app, "FitsWise is up to date");
+                }
+            });
+        }
         "startup" => {
             let on = app.autolaunch().is_enabled().unwrap_or(false);
             crate::set_startup(&app, !on);
@@ -101,6 +117,19 @@ fn menu_clicked(app: &AppHandle, id: &str) {
 pub fn set_startup(app: &AppHandle, on: bool) {
     if let Some(i) = app.try_state::<Items>() {
         let _ = i.startup.set_checked(on);
+    }
+}
+
+pub fn set_update(app: &AppHandle, version: Option<&str>) {
+    let text = version.map_or("Check for updates".into(), |v| {
+        format!("Install FitsWise {v}")
+    });
+    set_update_text(app, &text);
+}
+
+fn set_update_text(app: &AppHandle, text: &str) {
+    if let Some(i) = app.try_state::<Items>() {
+        let _ = i.update.set_text(text);
     }
 }
 

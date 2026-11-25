@@ -179,10 +179,10 @@ impl Link {
     }
 
     /// Battery levels and, from the same message, which buds are in the case.
-    pub fn charge(&self) -> Result<(Battery, Option<InCase>)> {
+    pub fn charge(&self) -> Result<Report> {
         let raw = self.get(op::BATTERY_GET, &[])?;
         trace("battery", &raw);
-        Ok((parse_battery(&raw), parse_in_case(&raw)))
+        Ok(parse_report(&raw))
     }
 
     pub fn name(&self) -> Result<String> {

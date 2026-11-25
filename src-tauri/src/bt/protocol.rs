@@ -222,12 +222,47 @@ impl InCase {
 
 const IN_CASE: u8 = 2;
 
+/// Everything one battery report says.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Report {
+    pub battery: Battery,
+    pub seats: Option<InCase>,
+    pub case_open: Option<bool>,
+}
+
+pub fn parse_report(p: &[u8]) -> Report {
+    Report {
+        battery: parse_battery(p),
+        seats: parse_in_case(p),
+        case_open: parse_case_open(p),
+    }
+}
+
+/// The case reports itself absent while its lid is shut, and a level once it opens.
+pub fn parse_case_open(p: &[u8]) -> Option<bool> {
+    let e = p.chunks_exact(5).find(|e| e[0] == 8 && e[1] == 1)?;
+    match e[3] {
+        4 => Some(false),
+        _ if (1..=100).contains(&e[2]) => Some(true),
+        _ => None, // waking up
+    }
+}
+
 /// The report's last group is `[lid, 0, ff, left, right]`. Its second byte tells it from a battery.
+/// With the lid shut the case reports itself absent and both buds read "out", but a bud that is
+/// charging can only be in the case. (With the lid open, a lifted bud still says "charging" briefly.)
 pub fn parse_in_case(p: &[u8]) -> Option<InCase> {
     let last = p.chunks_exact(5).find(|e| e[1] == 0)?;
+    let state = |part| {
+        p.chunks_exact(5)
+            .find(|e| e[0] == part && e[1] == 1)
+            .map(|e| e[3])
+    };
+    let shut = parse_case_open(p) == Some(false);
+    let charging = |part| shut && state(part) == Some(1);
     Some(InCase {
-        left: last[3] == IN_CASE,
-        right: last[4] == IN_CASE,
+        left: last[3] == IN_CASE || charging(4),
+        right: last[4] == IN_CASE || charging(2),
     })
 }
 
@@ -487,6 +522,45 @@ mod tests {
             right: true,
         };
         assert!(!lifted.swaps(both) && !both.swaps(lifted) && !InCase::default().swaps(lifted));
+    }
+
+    #[test]
+    fn a_bud_in_a_shut_case_is_in_the_case() {
+        // Recorded: left worn, right charging in the case with the lid shut (case reports absent).
+        let p = h("04016402010201610101080100040100 00ff0101"
+            .replace(' ', "")
+            .as_str());
+        assert_eq!(
+            parse_in_case(&p),
+            Some(InCase {
+                left: false,
+                right: true
+            })
+        );
+        let shown = parse_battery(&p).after(Battery::default(), parse_in_case(&p).unwrap());
+        assert!(
+            shown
+                .right
+                .is_some_and(|c| c.percent == 97 && c.charging && !c.stale)
+        );
+    }
+
+    #[test]
+    fn the_lid() {
+        assert_eq!(
+            parse_case_open(&h("04016402010201610101080100040100 00ff0101"
+                .replace(' ', "")
+                .as_str())),
+            Some(false)
+        );
+        assert_eq!(
+            parse_case_open(&h("0401630101020163010108016401010200ff0202")),
+            Some(true)
+        );
+        assert_eq!(
+            parse_case_open(&h("04016401010201ff030108010003010200ff0202")),
+            None
+        );
     }
 
     #[test]

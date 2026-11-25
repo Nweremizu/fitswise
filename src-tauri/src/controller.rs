@@ -49,6 +49,7 @@ pub struct Buds {
     pub name: Option<String>,
     pub battery: Battery,
     pub in_case: InCase,
+    pub case_open: bool,
     pub mode: Option<Mode>,
     pub ear_detection: Option<bool>,
     pub one_bud: Option<bool>,
@@ -156,13 +157,13 @@ impl Controller {
         let one_bud = known(l.one_bud())?;
         let buttons = known(l.buttons())?;
         let color = known(l.color())?;
-        if now.is_some_and(|(b, _)| b.incomplete()) {
+        if now.is_some_and(|r| r.battery.incomplete()) {
             let _ = self.wake.send(Wake::Incomplete);
         }
         self.update(|b| {
             b.status = Status::Connected;
-            if let Some((battery, seats)) = now {
-                charge(b, battery, seats);
+            if let Some(r) = now {
+                charge(b, r);
             }
             b.mode = mode.or(b.mode);
             b.name = name.or(b.name.take());
@@ -178,11 +179,11 @@ impl Controller {
 
     /// True while a bud's level is still missing.
     fn ask_again(&self) -> bool {
-        let Some(Ok((battery, seats))) = self.link().map(|l| l.charge()) else {
+        let Some(Ok(r)) = self.link().map(|l| l.charge()) else {
             return false;
         };
-        self.update(|b| charge(b, battery, seats));
-        battery.incomplete()
+        self.update(|b| charge(b, r));
+        r.battery.incomplete()
     }
 
     /// Sets the mode and waits for the buds to announce it.
@@ -268,11 +269,14 @@ impl Controller {
                 }
             }
             Event::Notify(op::BATTERY_NOTIFY, p) => {
-                let (battery, seats) = (parse_battery(&p), parse_in_case(&p));
+                let mut r = parse_report(&p);
                 // Believe a swap of sides only if the buds say it again when asked.
-                let doubt = seats.is_some_and(|s| s.swaps(lock(&self.buds).in_case));
-                self.update(|b| charge(b, battery, seats.filter(|_| !doubt)));
-                if doubt || battery.incomplete() {
+                let doubt = r.seats.is_some_and(|s| s.swaps(lock(&self.buds).in_case));
+                if doubt {
+                    r.seats = None;
+                }
+                self.update(|b| charge(b, r));
+                if doubt || r.battery.incomplete() {
                     let _ = self.wake.send(Wake::Incomplete);
                 }
             }
@@ -407,9 +411,15 @@ impl Controller {
     }
 }
 
-fn charge(b: &mut Buds, battery: Battery, seats: Option<InCase>) {
-    b.in_case = seats.unwrap_or(b.in_case);
-    b.battery = battery.after(b.battery, b.in_case);
+fn charge(b: &mut Buds, r: Report) {
+    b.in_case = r.seats.unwrap_or(b.in_case);
+    b.case_open = r.case_open.unwrap_or(b.case_open);
+    b.battery = r.battery.after(b.battery, b.in_case);
+    if !b.case_open
+        && let Some(c) = &mut b.battery.case
+    {
+        c.stale = true; // a shut case can't report; this is its level from before
+    }
 }
 
 fn set_presses(b: &mut Buds, v: [u8; 4]) {
