@@ -485,9 +485,10 @@ main,
 .desktop {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 340px));
+  grid-template-columns: minmax(0, 320px) minmax(0, 320px) minmax(0, 250px);
   justify-content: center;
-  gap: 32px;
+  align-items: start;
+  gap: 28px;
   margin-top: 48px;
   padding: 56px 24px;
   border-radius: 32px;
@@ -558,25 +559,28 @@ main,
 }
 
 .popup {
-  position: absolute;
-  inset-inline-end: max(4%, calc(50% - 470px));
-  bottom: 28px;
-  width: min(250px, 36%);
-  margin: 0;
+  align-self: end;
+  margin: 0 0 8px;
   filter: drop-shadow(0 30px 40px rgb(0 0 0 / 55%));
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1000px) {
   .desktop {
-    grid-template-columns: minmax(0, 300px);
-    padding: 32px 16px 120px;
+    grid-template-columns: minmax(0, 320px) minmax(0, 250px);
   }
   .window.dark {
     display: none;
   }
+}
+
+@media (max-width: 760px) {
+  .desktop {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 12px;
+    padding: 28px 12px;
+  }
   .popup {
-    inset-inline-end: 16px;
-    bottom: 16px;
+    margin: 0;
   }
 }
 
