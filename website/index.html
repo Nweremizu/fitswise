@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>FitsWise — Beats Fit Pro on Windows</title>
     <meta name="description" content="A tiny, free Windows app for Beats Fit Pro: battery for each bud and the case, noise control, press-and-hold, and a popup when your buds connect." />
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
     <meta property="og:title" content="FitsWise — Beats Fit Pro on Windows" />
     <meta property="og:description" content="Battery, noise control and settings for Beats Fit Pro, right on your PC." />
     <meta property="og:image" content="assets/icon.png" />
@@ -16,189 +17,207 @@
       { "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/addons/" } }
     </script>
     <link rel="modulepreload" href="vendor/three.module.js" />
-    <link rel="preload" href="assets/buds.glb" as="fetch" crossorigin />
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
 
-    <!-- One 3D stage for the whole page. Scrolling drives it; the words below never depend on it. -->
-    <div class="stage" aria-hidden="true">
-      <img class="stage-poster" src="assets/main-dark.webp" alt="" />
-      <canvas id="buds"></canvas>
-      <div class="pins">
-        <span class="pin" data-pin="left"><i style="--p: 85"></i><b>85%</b> Left</span>
-        <span class="pin" data-pin="case"><i style="--p: 64"></i><b>64%</b> Case</span>
-        <span class="pin" data-pin="right"><i style="--p: 80" class="charging"></i><b>80%</b> Right</span>
-      </div>
-    </div>
+    <!-- One goo filter for every liquid control on the page. -->
+    <svg class="defs" aria-hidden="true" width="0" height="0">
+      <filter id="goo">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+        <feColorMatrix in="blur" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </svg>
 
     <header class="nav">
       <div class="wrap nav-inner">
         <a class="brand" href="#top" aria-label="FitsWise home">
-          <img src="assets/favicon.png" alt="" width="26" height="26" />
+          <img src="assets/favicon.png" alt="" width="24" height="24" />
           <span>FitsWise</span>
         </a>
-        <nav aria-label="Sections">
-          <a href="#story">Tour</a>
-          <a href="#app">The app</a>
+        <nav class="nav-links" aria-label="Sections">
+          <a href="#try">Try it</a>
+          <a href="#features">Features</a>
           <a href="#privacy">Privacy</a>
           <a href="#faq">FAQ</a>
         </nav>
-        <a class="button small" data-download href="https://github.com/Nweremizu/fitswise/releases/latest">Download</a>
+        <div class="nav-end">
+          <a class="icon-button" href="https://github.com/Nweremizu/fitswise" aria-label="FitsWise on GitHub">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.3 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" /></svg>
+          </a>
+          <a class="button small" data-download href="https://github.com/Nweremizu/fitswise/releases/latest">Download</a>
+        </div>
       </div>
     </header>
 
     <main id="main">
-      <section class="hero" id="top" data-scene="hero">
+      <!-- ---------- hero ---------- -->
+      <section class="hero" id="top">
+        <canvas class="dither" aria-hidden="true"></canvas>
         <div class="wrap hero-inner">
-          <p class="eyebrow">Free and open source · Windows 10 and 11</p>
-          <h1>Your Beats Fit Pro,<br /><span class="glint">at home on Windows.</span></h1>
+          <img class="app-icon" src="assets/icon.png" alt="" width="76" height="76" />
+          <a class="badge" href="https://github.com/Nweremizu/fitswise">
+            <b>Free</b> Open source, MIT licensed
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
+          </a>
+          <h1>Your Beats Fit Pro,<br />at home on Windows.</h1>
           <p class="lede">
-            Battery for each bud and the case, noise control, press-and-hold and more, in a small app that waits in your
-            tray and says hello when your buds connect.
+            Battery for each bud and the case, noise control, press-and-hold and a popup when your buds connect. The
+            things your iPhone shows, now on your PC.
           </p>
           <div class="cta">
             <a class="button" data-download href="https://github.com/Nweremizu/fitswise/releases/latest">
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 4.6 10.4 3.6v7.1H3V4.6Zm8.4-1.1L21 2v8.7h-9.6V3.5ZM3 11.6h7.4v7.2L3 17.7v-6.1Zm8.4 0H21V20l-9.6-1.4v-7Z" /></svg>
-              <span>Download for Windows</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="fill"><path d="M3 4.6 10.4 3.6v7.1H3V4.6Zm8.4-1.1L21 2v8.7h-9.6V3.5ZM3 11.6h7.4v7.2L3 17.7v-6.1Zm8.4 0H21V20l-9.6-1.4v-7Z" /></svg>
+              Download for Windows
             </a>
-            <a class="button ghost" href="https://github.com/Nweremizu/fitswise">View on GitHub</a>
+            <a class="button ghost" href="https://github.com/Nweremizu/fitswise">
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="fill"><path d="m12 3 2.6 5.5 6 .8-4.4 4.1 1.1 6L12 16.5l-5.3 2.9 1.1-6-4.4-4.1 6-.8L12 3Z" /></svg>
+              Star on GitHub
+            </a>
           </div>
-          <p class="fine" data-download-meta>Under 3 MB · no account · updates itself</p>
+          <p class="meta" data-download-meta>Windows 10 and 11 · under 3 MB · no account · updates itself</p>
         </div>
-        <a class="scroll-cue" href="#story"><span>Take the tour</span><i aria-hidden="true"></i></a>
       </section>
 
-      <div class="story" id="story">
-        <section class="chapter" data-scene="open" aria-labelledby="c-open">
-          <div class="wrap">
-            <div class="card">
-              <p class="step">01</p>
-              <h2 id="c-open">Open the case. FitsWise is already looking.</h2>
-              <p>The app follows your real buds. Flip the lid and the case on screen opens with it.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="chapter" data-scene="battery" aria-labelledby="c-battery">
-          <div class="wrap">
-            <div class="card">
-              <p class="step">02</p>
-              <h2 id="c-battery">Battery for each bud, and the case.</h2>
-              <p>Left, right and case, live. Take a bud out and it lifts out on screen. When one goes quiet for a moment, you keep its last level instead of a scary zero.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="chapter" data-scene="noise" aria-labelledby="c-noise">
-          <div class="wrap">
-            <div class="card">
-              <p class="step">03</p>
-              <h2 id="c-noise">Noise control, from anywhere.</h2>
-              <p>Switch between noise cancelling, transparency and off from the app, the tray, or a shortcut that works in any window.</p>
-              <ul class="modes" aria-label="Noise control modes">
-                <li data-mode="0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3.5" /></svg>Noise cancelling</li>
-                <li data-mode="1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5" /><path d="M5.5 7.5a8 8 0 0 0 0 9M18.5 7.5a8 8 0 0 1 0 9" /></svg>Transparency</li>
-                <li data-mode="2"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5" /></svg>Off</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section class="chapter" data-scene="close" aria-labelledby="c-close">
-          <div class="wrap">
-            <div class="card">
-              <p class="step">04</p>
-              <h2 id="c-close">In your ears, it's just the buds.</h2>
-              <p>Close the case and the buds step aside, the lid shuts, and the view settles on what you're wearing. Put one back and it greys out until you take it again.</p>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <section class="showcase" id="app" aria-labelledby="app-title">
+      <!-- ---------- the live preview ---------- -->
+      <section class="try" id="try" aria-labelledby="try-title">
         <div class="wrap">
-          <p class="eyebrow">The app</p>
-          <h2 id="app-title">Small, calm, and native to Windows.</h2>
-          <div class="desktop">
-            <figure class="window light">
-              <div class="titlebar"><img src="assets/favicon.png" alt="" width="14" height="14" /> FitsWise<span class="controls" aria-hidden="true"><i></i><i></i><i></i></span></div>
-              <img src="assets/main-light.webp" alt="FitsWise with both buds in the case: battery rings for left, case and right, and the noise control buttons." width="380" height="562" loading="lazy" />
-            </figure>
-            <figure class="window dark">
-              <div class="titlebar"><img src="assets/favicon.png" alt="" width="14" height="14" /> FitsWise<span class="controls" aria-hidden="true"><i></i><i></i><i></i></span></div>
-              <img src="assets/main-dark.webp" alt="FitsWise in dark mode while the buds are worn, with noise cancelling on." width="380" height="562" loading="lazy" />
-            </figure>
-            <figure class="popup">
-              <img src="assets/popup-dark.webp" alt="The popup that appears when your buds connect, with the case, battery and noise control." width="336" height="458" loading="lazy" />
-            </figure>
-          </div>
-
-          <div class="bento">
-            <article class="tile">
-              <div class="tile-art bubble" aria-hidden="true"><img src="assets/popup-light.webp" alt="" loading="lazy" /></div>
-              <h3>Says hello</h3>
-              <p>A small card slides up when your buds connect, and stays out of the way of games and films.</p>
-            </article>
-            <article class="tile">
-              <div class="tile-art tray" aria-hidden="true">
-                <span>Open FitsWise</span><span class="on">Noise cancelling</span><span>Transparency</span><span>Off</span><span class="tick">Start with Windows</span>
+          <h2 class="sr-only" id="try-title">Try it</h2>
+          <div class="frame">
+            <div class="frame-bar">
+              <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="frame-title">fitswise · live preview</span>
+              <span class="frame-hint">Drag to turn</span>
+            </div>
+            <div class="frame-body">
+              <ol class="scenes" aria-label="Steps">
+                <li><button type="button" data-scene="0" aria-pressed="true"><span>In the case</span><small>Lid shut</small></button></li>
+                <li><button type="button" data-scene="1" aria-pressed="false"><span>Open the lid</span><small>Battery appears</small></button></li>
+                <li><button type="button" data-scene="2" aria-pressed="false"><span>Take them out</span><small>They lift out with you</small></button></li>
+                <li><button type="button" data-scene="3" aria-pressed="false"><span>In your ears</span><small>The case steps away</small></button></li>
+              </ol>
+              <div class="preview">
+                <div class="stage">
+                  <picture class="stage-poster">
+                    <source srcset="assets/popup-dark.webp" media="(prefers-color-scheme: dark)" />
+                    <img src="assets/popup-light.webp" alt="" />
+                  </picture>
+                  <canvas id="buds" aria-label="3D model of Beats Fit Pro and the case" role="img"></canvas>
+                </div>
+                <div class="panel">
+                  <p class="status"><i aria-hidden="true"></i><span data-status>In the case</span></p>
+                  <div class="rings">
+                    <div class="ring" style="--p: 85"><svg viewBox="0 0 56 56" aria-hidden="true"><circle r="23" cx="28" cy="28" /><circle r="23" cx="28" cy="28" /></svg><b>85</b><span>Left</span></div>
+                    <div class="ring" style="--p: 64"><svg viewBox="0 0 56 56" aria-hidden="true"><circle r="23" cx="28" cy="28" /><circle r="23" cx="28" cy="28" /></svg><b>64</b><span>Case</span></div>
+                    <div class="ring" data-charging style="--p: 80"><svg viewBox="0 0 56 56" aria-hidden="true"><circle r="23" cx="28" cy="28" /><circle r="23" cx="28" cy="28" /></svg><b>80</b><span>Right</span><em aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" /></svg></em></div>
+                  </div>
+                  <div class="segments" role="radiogroup" aria-label="Noise control" data-disabled>
+                    <div class="goo" aria-hidden="true"><i class="lead"></i><i class="tail"></i></div>
+                    <button type="button" role="radio" aria-checked="true" aria-label="Noise cancelling" data-mode="0" title="Noise cancelling">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.2" r="3.1" /><path d="M4.8 20.4c0-3.5 3.2-5.5 7.2-5.5s7.2 2 7.2 5.5c0 .4-.3.6-.7.6h-13c-.4 0-.7-.2-.7-.6Z" /><path class="halo" d="M7.1 13.5a6.4 6.4 0 1 1 9.8 0" /></svg>
+                    </button>
+                    <button type="button" role="radio" aria-checked="false" aria-label="Off" data-mode="1" title="Off">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.2" r="3.1" /><path d="M4.8 20.4c0-3.5 3.2-5.5 7.2-5.5s7.2 2 7.2 5.5c0 .4-.3.6-.7.6h-13c-.4 0-.7-.2-.7-.6Z" /></svg>
+                    </button>
+                    <button type="button" role="radio" aria-checked="false" aria-label="Transparency" data-mode="2" title="Transparency">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.2" r="3.1" /><path d="M4.8 20.4c0-3.5 3.2-5.5 7.2-5.5s7.2 2 7.2 5.5c0 .4-.3.6-.7.6h-13c-.4 0-.7-.2-.7-.6Z" /><path class="halo dotted" d="M7.1 13.5a6.4 6.4 0 1 1 9.8 0" /></svg>
+                    </button>
+                  </div>
+                  <p class="hint" aria-live="polite" data-hint>Put your buds in to change noise control</p>
+                </div>
               </div>
-              <h3>Lives in your tray</h3>
-              <p>Starts with Windows if you like, and stays out of sight until you need it.</p>
-            </article>
-            <article class="tile">
-              <div class="tile-art keys" aria-hidden="true"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Shift</kbd><kbd>1</kbd></div>
-              <h3>Shortcuts</h3>
-              <p>Change or turn off every shortcut, and see if another app already uses one.</p>
-            </article>
-            <article class="tile">
-              <div class="tile-art list" aria-hidden="true">
-                <span>Left press and hold <b>Volume down</b></span>
-                <span>Automatic ear detection <b class="toggle"></b></span>
-                <span>Name <b>My earbuds</b></span>
-              </div>
-              <h3>The settings that hide in the phone app</h3>
-              <p>Press-and-hold for each bud, ear detection, noise control with one bud, and renaming.</p>
-            </article>
+            </div>
           </div>
-
-          <dl class="numbers" aria-label="Size and speed">
-            <div><dt>installer</dt><dd>&lt;3 MB</dd></div>
-            <div><dt>memory in the tray</dt><dd>~6 MB</dd></div>
-            <div><dt>CPU while idle</dt><dd>0%</dd></div>
-            <div><dt>to say hello</dt><dd>0.5 s</dd></div>
-          </dl>
+          <p class="caption"><span class="num">001</span><b>Live preview</b><span>The same 3D model the app uses. Pick a step, switch noise control, or drag to turn it.</span></p>
         </div>
       </section>
 
-      <section class="trust" id="privacy" aria-labelledby="privacy-title">
-        <div class="wrap trust-inner">
-          <div>
-            <p class="eyebrow">Built to be trusted</p>
-            <h2 id="privacy-title">Quiet, private and polite.</h2>
-          </div>
-          <div class="trust-grid">
-            <article>
-              <h3>Never fights your phone</h3>
-              <p>FitsWise only talks to your buds while Windows is already using them. It never pulls them away from your phone.</p>
+      <!-- ---------- features ---------- -->
+      <section class="features" id="features" aria-labelledby="features-title">
+        <div class="wrap">
+          <p class="eyebrow">What it does</p>
+          <h2 id="features-title">Everything your iPhone shows,<br />now on your PC.</h2>
+          <div class="tiles">
+            <article class="tile">
+              <div class="art">
+                <picture class="popup-art">
+                  <source srcset="assets/popup-dark.webp" media="(prefers-color-scheme: dark)" />
+                  <img src="assets/popup-light.webp" alt="" loading="lazy" width="336" height="458" />
+                </picture>
+              </div>
+              <p class="caption"><span class="num">002</span><b>Says hello</b><span>A small card slides up when your buds connect, and stays out of the way of games and films.</span></p>
             </article>
-            <article>
-              <h3>Nothing leaves your PC</h3>
-              <p>No account, no analytics. The only time it goes online is to check GitHub for a new version, which you can turn off.</p>
+            <article class="tile">
+              <div class="art">
+                <div class="menu" aria-hidden="true">
+                  <span>Open FitsWise</span>
+                  <hr />
+                  <span class="on">Noise cancelling</span><span>Transparency</span><span>Off</span>
+                  <hr />
+                  <span class="tick">Start with Windows</span>
+                </div>
+              </div>
+              <p class="caption"><span class="num">003</span><b>Lives in your tray</b><span>Noise control from the tray menu. Starts with Windows if you like, and stays out of sight.</span></p>
             </article>
-            <article>
-              <h3>Signed updates</h3>
-              <p>Updates are checked against a signature built into the app, so a tampered download is refused.</p>
+            <article class="tile">
+              <div class="art">
+                <div class="keys" aria-hidden="true"><kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>Shift</kbd><kbd>1</kbd></div>
+              </div>
+              <p class="caption"><span class="num">004</span><b>Shortcuts</b><span>Switch noise control from any window. Change every shortcut, and see if another app already uses it.</span></p>
             </article>
-            <article>
-              <h3>Open source</h3>
-              <p>Every line is on GitHub under the MIT licence. Read it, build it yourself, or help make it better.</p>
+            <article class="tile">
+              <div class="art">
+                <div class="settings">
+                  <span>Left press and hold <b>Volume down</b></span>
+                  <label>Automatic ear detection <input class="switch" type="checkbox" checked /></label>
+                  <label>Noise control with one bud <input class="switch" type="checkbox" /></label>
+                </div>
+              </div>
+              <p class="caption"><span class="num">005</span><b>The hidden settings</b><span>Press-and-hold for each bud, ear detection and renaming, without the phone app.</span></p>
+            </article>
+            <article class="tile">
+              <div class="art">
+                <div class="toast" aria-hidden="true">
+                  <img src="assets/favicon.png" alt="" width="20" height="20" />
+                  <span><b>A new FitsWise is ready</b>Signature checked. Restart to update.</span>
+                  <i>Restart</i>
+                </div>
+              </div>
+              <p class="caption"><span class="num">006</span><b>Updates itself</b><span>New versions install in the background, checked against a signature built into the app.</span></p>
+            </article>
+            <article class="tile">
+              <div class="art">
+                <dl class="numbers">
+                  <div><dt>installer</dt><dd>&lt;3 MB</dd></div>
+                  <div><dt>in the tray</dt><dd>~6 MB</dd></div>
+                  <div><dt>idle CPU</dt><dd>0%</dd></div>
+                </dl>
+              </div>
+              <p class="caption"><span class="num">007</span><b>Tiny</b><span>Native Windows, not a browser in a box. You won't notice it's running.</span></p>
             </article>
           </div>
         </div>
       </section>
 
+      <!-- ---------- privacy ---------- -->
+      <section class="privacy" id="privacy" aria-labelledby="privacy-title">
+        <div class="wrap">
+          <div class="note">
+            <div>
+              <p class="eyebrow">Built to be trusted</p>
+              <h2 id="privacy-title">Quiet, private and polite.</h2>
+            </div>
+            <ul>
+              <li><b>Never fights your phone.</b> FitsWise only talks to your buds while Windows is already using them.</li>
+              <li><b>Nothing leaves your PC.</b> No account, no analytics. It only goes online to check for updates, and you can turn that off.</li>
+              <li><b>Open source.</b> Every line is on GitHub under the MIT licence. Read it or build it yourself.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- questions ---------- -->
       <section class="faq" id="faq" aria-labelledby="faq-title">
         <div class="wrap narrow">
           <h2 id="faq-title">Questions</h2>
@@ -225,22 +244,25 @@
         </div>
       </section>
 
-      <section class="final" data-scene="final" aria-labelledby="final-title">
+      <section class="final" aria-labelledby="final-title">
         <div class="wrap final-inner">
           <h2 id="final-title">Give your buds a proper home.</h2>
-          <a class="button" data-download href="https://github.com/Nweremizu/fitswise/releases/latest"><span>Download for Windows</span></a>
-          <p class="fine" data-download-meta>Under 3 MB · no account · updates itself</p>
+          <a class="button" data-download href="https://github.com/Nweremizu/fitswise/releases/latest">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="fill"><path d="M3 4.6 10.4 3.6v7.1H3V4.6Zm8.4-1.1L21 2v8.7h-9.6V3.5ZM3 11.6h7.4v7.2L3 17.7v-6.1Zm8.4 0H21V20l-9.6-1.4v-7Z" /></svg>
+            Download for Windows
+          </a>
+          <p class="meta" data-download-meta>Windows 10 and 11 · under 3 MB · no account · updates itself</p>
         </div>
       </section>
     </main>
 
     <footer class="footer">
       <div class="wrap footer-inner">
-        <p>FitsWise is free and open source under the MIT licence.</p>
-        <p>Beats and Beats Fit Pro are trademarks of Apple Inc. FitsWise is not affiliated with Apple or Beats.</p>
+        <p>FitsWise is free and open source under the MIT licence. Beats and Beats Fit Pro are trademarks of Apple Inc. FitsWise is not affiliated with Apple or Beats.</p>
         <p><a href="https://github.com/Nweremizu/fitswise">Source</a> · <a href="https://github.com/Nweremizu/fitswise/releases">Releases</a> · <a href="https://github.com/Nweremizu/fitswise/blob/main/CONTRIBUTING.md">Contribute</a> · <a href="https://github.com/Nweremizu/fitswise/issues">Report a problem</a></p>
       </div>
     </footer>
+
     <script type="module" src="app.js"></script>
   </body>
 </html>
